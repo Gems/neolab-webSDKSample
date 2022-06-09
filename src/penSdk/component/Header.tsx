@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles, Typography } from '@material-ui/core';
-import LogoTextImage from '../assets/pwa152.png';
+import LogoTextImage from '../../assets/pwa152.png';
 import ConnectButton from '../buttons/ConnectButton';
 import PasswordButton from '../buttons/PasswordButton';
 import ProfileButton from '../buttons/ProfileButton';

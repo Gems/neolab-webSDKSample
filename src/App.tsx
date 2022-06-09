@@ -1,12 +1,12 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Main from './component/Main';
+import PenSDKSample from './penSdk';
 
 const App = () => {
   return (
     <div>
       <Routes>
-        <Route path='/' element={<Main />} />
+        <Route path='/' element={<PenSDKSample />} />
       </Routes>
     </div>
   );
