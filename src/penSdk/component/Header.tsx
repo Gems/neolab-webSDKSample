@@ -15,6 +15,19 @@ const useStyle = makeStyles((theme) => ({
     backdropFilter: 'blur(4px)',
     borderBottom: '1px solid #E7E7E7',
     justifyContent: 'space-between',
+    "& button" : {
+      padding: '4px',
+      color: '#121212',
+      fontFamily: 'Noto Sans CJK KR',
+      fontStyle: 'normal',
+      fontWeight: 'bold',
+      fontSize: '13px',
+      lineHeight: '16px',
+      letterSpacing: '0.25px',
+      minWidth: '120px',
+      marginRight: '16px',
+      border: '1px solid #CED3E2'
+    }
   },
   logoContainer: {
     alignItems: 'center',
