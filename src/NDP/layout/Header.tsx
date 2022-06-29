@@ -1,7 +1,8 @@
 import React from 'react';
 import { makeStyles, Typography } from '@material-ui/core';
-import LogoTextImage from '../../assets/pwa152.png';
 import LoginButton from "../component/LoginButton"
+import SocketButton from '../component/SocketButton';
+import LogoTextImage from '../../assets/pwa152.png';
 
 const useStyle = makeStyles((theme) => ({
   wrap: {
@@ -12,6 +13,19 @@ const useStyle = makeStyles((theme) => ({
     backdropFilter: 'blur(4px)',
     borderBottom: '1px solid #E7E7E7',
     justifyContent: 'space-between',
+    "& button" : {
+      padding: '4px',
+      color: '#121212',
+      fontFamily: 'Noto Sans CJK KR',
+      fontStyle: 'normal',
+      fontWeight: 'bold',
+      fontSize: '13px',
+      lineHeight: '16px',
+      letterSpacing: '0.25px',
+      minWidth: '120px',
+      marginRight: '16px',
+      border: '1px solid #CED3E2'
+    }
   },
   logoContainer: {
     alignItems: 'center',
@@ -49,6 +63,7 @@ const Header = () => {
       </div>
       <div className={classes.navStyle}>
         <LoginButton />
+        <SocketButton />
       </div>
     </div>
   );
