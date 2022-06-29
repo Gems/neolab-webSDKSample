@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core';
 import React from 'react';
-import PenBasedRenderer from './renderer/PenBasedRenderer';
+import PenBasic from './renderer/PenBasic';
 
 const useStyle = makeStyles((theme) => ({
   mainBackground: {
@@ -20,7 +20,7 @@ const PenSDKSample = () => {
   
   return (
     <div className={classes.mainBackground}>
-      <PenBasedRenderer />
+      <PenBasic />
     </div>
   );
 };
