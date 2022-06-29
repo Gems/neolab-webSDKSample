@@ -4,7 +4,6 @@ import PenSDKSample from './penSdk';
 import NDPSample from './NDP';
 import qs from "query-string";
 
-
 const App = () => {
   /**
    * TODO : NDP 로그인용 code 받기 인데, 여기 말고 팝업용으로 따로 옮겨야 함
