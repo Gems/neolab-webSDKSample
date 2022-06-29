@@ -3,19 +3,6 @@ import { Button, makeStyles } from '@material-ui/core';
 import { PenHelper } from 'web_pen_sdk';
 
 const useStyle = makeStyles((theme) => ({
-  caption: {
-    padding: '4px',
-    color: '#121212',
-    fontFamily: 'Noto Sans CJK KR',
-    fontStyle: 'normal',
-    fontWeight: 'bold',
-    fontSize: '13px',
-    lineHeight: '16px',
-    letterSpacing: '0.25px',
-    width: '120px',
-    marginRight: '16px',
-    border: '1px solid #CED3E2'
-  },
 }));
 
 const ProfileButton = ({ controller }) => {
@@ -93,12 +80,12 @@ const ProfileButton = ({ controller }) => {
   }
   return (
     <>
-        <Button onClick={createProfile} className={classes.caption}>createProfile</Button>
-        <Button onClick={DeleteProfile} className={classes.caption}>DeleteProfile</Button>
-        <Button onClick={InfoProfile} className={classes.caption}>InfoProfile</Button>
-        <Button onClick={WriteProfileV} className={classes.caption}>WriteProfileV</Button>
-        <Button onClick={ReadProfileV} className={classes.caption}>ReadProfileV</Button>
-        <Button onClick={DeleteProfileV} className={classes.caption}>DeleteProfileV</Button>
+        <Button onClick={createProfile} >createProfile</Button>
+        <Button onClick={DeleteProfile} >DeleteProfile</Button>
+        <Button onClick={InfoProfile} >InfoProfile</Button>
+        <Button onClick={WriteProfileV} >WriteProfileV</Button>
+        <Button onClick={ReadProfileV} >ReadProfileV</Button>
+        <Button onClick={DeleteProfileV} >DeleteProfileV</Button>
     </>
   );
 };

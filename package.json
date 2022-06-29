@@ -8,6 +8,7 @@
     "fabric": "^5.2.1",
     "firebase": "^9.6.11",
     "jszip": "^3.9.1",
+    "query-string": "^7.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
@@ -20,6 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start2": "set PORT=52095 && yarn start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
