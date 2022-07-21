@@ -1,8 +1,9 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import PenSDKSample from './penSdk';
+import PenSDKSample from './penSdk/component/PenSDKSample';
 import NDPSample from './NDP';
 import qs from "query-string";
+import ViewSDKSample from './penSdk/component/ViewSDKSample';
 
 const App = () => {
   /**
@@ -22,6 +23,7 @@ const App = () => {
         <Routes>
           <Route path='/' element={<PenSDKSample />} />
           <Route path='/ndp' element={<NDPSample />} />
+          <Route path='/view' element={<ViewSDKSample />} />
         </Routes>
       </div>
   );
