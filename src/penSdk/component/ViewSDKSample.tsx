@@ -15,7 +15,7 @@ const useStyle = makeStyles((theme) => ({
   }
 }));
 
-const Render = () => {
+const ViewSDKSample = () => {
   const classes = useStyle();
   
   return (
@@ -25,4 +25,4 @@ const Render = () => {
   );
 };
 
-export default Render;
+export default ViewSDKSample;

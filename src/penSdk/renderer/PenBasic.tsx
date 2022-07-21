@@ -6,6 +6,7 @@ import { Dot, PageInfo, ScreenDot, PaperSize, VersionInfo, SettingInfo } from 'w
 import { NULL_PageInfo } from '../utils/constants';
 import Header from '../component/Header';
 import { isPlatePaper, isSamePage } from 'web_view_sdk_test/dist/common';
+import { isPUI } from 'web_pen_sdk/dist/API/PageInfo';
 
 const useStyle = makeStyles(() => ({
   mainBackground: {
@@ -75,6 +76,9 @@ const PenBasic = () => {
   /** Setting Ncode noteImage/paperSize */ 
   useEffect(() => {
     async function getNoteImageUsingAPI(pageInfo) {
+      if(isPUI(pageInfo)){
+        return;
+      }
       if (pageInfo.section === 0) {  // pageInfo.section === 0 -> abnormal pageInfo
         return;
       } 
@@ -195,7 +199,7 @@ const PenBasic = () => {
       }
       return
     }
-
+    console.log(`x: ${dot.x} y: ${dot.y}`);
     /** Update pageInfo either pageInfo !== NULL_PageInfo or pageInfo changed */ 
     if ((!pageInfo && !isSamePage(dot.pageInfo, NULL_PageInfo)) || 
         (pageInfo && !isSamePage(pageInfo, dot.pageInfo))) {
@@ -282,6 +286,7 @@ const PenBasic = () => {
         break;
       case PenMessageType.PEN_AUTHORIZED:
         setAuthorized(true);  // Pen 인증 성공시 authorized trigger 값 true 변경
+        PenHelper.debugMode(false);
         break;
       case PenMessageType.PEN_USING_NOTE_SET_RESULT:
         controller?.SetHoverEnable(true);
@@ -384,6 +389,14 @@ const PenBasic = () => {
     setHoverPoint(hoverPoint);
     hoverCanvasFb.add(hoverPoint);
   }
+
+  // PenHelper.getPaperInfo({
+  //   section: 3,
+  //   owner: 1013,
+  //   book: 2,
+  //   page: 16
+  // })
+
   
   return (
     <>
