@@ -1,18 +1,13 @@
-import { makeStyles } from '@material-ui/core';
+import { Button, duration, makeStyles, MenuItem, Select } from '@material-ui/core';
 import { PenHelper, PenMessageType, PenController } from 'web_pen_sdk';
 import React, { useEffect, useReducer, useRef, useState } from "react";
-import { Dot, VersionInfo, SettingInfo } from 'web_pen_sdk/dist/Util/type';
+import { VersionInfo, SettingInfo } from 'web_pen_sdk/dist/Util/type';
 import Header from '../component/Header';
-import PenManager from 'web_view_sdk_test/dist/common/neopen/PenManager';
-import { INeoSmartpen } from 'web_view_sdk_test/dist/common/neopen/INeoSmartpen';
-import { IPageSOBP } from 'web_view_sdk_test/dist/common/structures/Structures';
-import { InkStorage } from 'web_view_sdk_test/dist/common/penstorage/InkStorage';
-import RenderHelper from 'web_view_sdk_test/dist/helper/RenderHelper';
-import MainViewFC from 'web_view_sdk_test/dist/renderer/view/MainView';
-import appendPdfToStorage from 'web_view_sdk_test/dist/renderer/appendPdfToStorage';
-import ViewMessageType from 'web_view_sdk_test/dist/common/structures/ViewMessageType';
+import { appendPdfToStorage, MainViewFC, PenManager, RenderHelper, savePDF, ViewMessageType } from 'web_view_sdk_test';
 import { OuterRendererProps } from 'web_view_sdk_test/dist/renderer';
-import {savePDF} from "web_view_sdk_test/dist/savePdf/SavePdf";
+import OptionMessageType from 'web_view_sdk_test/dist/common/structures/OptionMessageType';
+import { IPageSOBP, ZoomFitEnum } from 'web_view_sdk_test/dist/common';
+import ReplayModal from './ReplayModal';
 
 const useStyle = makeStyles(() => ({
   mainBackground: {
@@ -21,7 +16,7 @@ const useStyle = makeStyles(() => ({
     textAlign: 'center',
     alignItems: 'center',
     position: 'relative',
-    height: window.innerHeight-163.25,
+    height: window.innerHeight,
     justifyContent: 'center',
     backgroundColor: '#f5f5f5',
   },
@@ -38,7 +33,7 @@ const useStyle = makeStyles(() => ({
 }));
 
 const ViewBasic = () => {
-  console.error("[ViewBasic] Init");
+  // console.error("[ViewBasic] Init");
   const classes = useStyle();
   
   const [passwordPen, setPasswordPen] = useState<boolean>(false);
@@ -50,17 +45,19 @@ const ViewBasic = () => {
   const penManager = new PenManager();
   const renderHelper = useRef({} as RenderHelper);
 
-  const [pens, setPens] = useState([] as INeoSmartpen[]);
-  const [pageInfos, setPageInfos] = useState([] as IPageSOBP[]);
-  const [activePage, setActivePage] = useState({ section: 3, owner: 1012, book: 3001, page: 3 } as IPageSOBP);
   const [options, setOptions] = useState({} as OuterRendererProps)
   const [, forceUpdate] = useReducer(x => x + 1, 0);
+  
+  const [activePage, setActivePage] = useState<IPageSOBP>({} as IPageSOBP);
+  const [pageInfos, setPageInfos] = useState<IPageSOBP[]>([]);
+
+  const [replayModalOn, SetReplayModalOn] = useState<boolean>(false);
+  const [duration, setDuration] = useState<number>(0);
 
   useEffect(() => {
     console.error("[renderHelper] init!!!!!!!!!!!!!!!!!!")
 
     renderHelper.current = new RenderHelper();
-    setOption();
   }, []);
   
   /**
@@ -70,6 +67,7 @@ const ViewBasic = () => {
    */
   useEffect(() => {
     PenHelper.dotCallback = async (mac, dot) => {
+      // console.log(dot);
       penManager.passingDot(dot);
       // strokeProcess(dot);
     }
@@ -97,20 +95,19 @@ const ViewBasic = () => {
       viewMessage(type, args);
     }
   });
-
+  
   /**
    * Process ncode dot.
    * 
    * @param {Dot} dot
    */
   // const strokeProcess = (dot: Dot) => {
-  //   penManager.passingDot(dot);
-  // }
+    //   penManager.passingDot(dot);
+    // }
 
   //region ViewSDK
   const registPen = (controller) => {
     penManager.registerPen(controller);
-    setPens(penManager.getPens());
   }
   //endRegion
 
@@ -161,6 +158,9 @@ const ViewBasic = () => {
       case PenMessageType.PEN_USING_NOTE_SET_RESULT:
         controller?.SetHoverEnable(true);
         break;
+      case PenMessageType.EVENT_DOT_PUI:
+        console.log(args);
+        break;
       default:
         break;
     }
@@ -174,6 +174,21 @@ const ViewBasic = () => {
       case ViewMessageType.VIEW_PAGE_CHANGE:
         console.log("VIEWCHANGE");
         console.log(args);
+        setActivePage(args.activePage)
+        break;
+      case ViewMessageType.REPLAY_PROGRESS:
+        console.log(`리플레이 진행도 : ${args.progress}, 진행시간 : ${Math.floor(args.deltaTime / 1000)}`);
+        // deltaTime.current = args.deltaTime;
+        // setDeltatime(args.deltaTime);
+        break;
+      case ViewMessageType.ADDED_PAGEINFO:
+        setPageInfos(args.pageInfos)
+        break;
+      case ViewMessageType.CHANGE_ACTIVEPAGE:
+        setActivePage(args.activePage)
+        break;
+      case OptionMessageType.IS_CROP_MODE:
+        console.log(args)
         break;
       default:
         break;
@@ -224,21 +239,32 @@ const ViewBasic = () => {
   }
   const zoomIn = () => {
     renderHelper.current.handleZoomIn();
-    setOption();
   }
   const zoomOut = () => {
     renderHelper.current.handleZoomOut();
-    setOption();
   }
   const showGrid = () => {
     renderHelper.current.toggleShowGrid();
-    setOption();
   }
   const cropMode = () => {
     renderHelper.current.toggleIsCropMode();
-    setOption();
   }
-  const erase = (e) => {
+  const autoPageChange = () => {
+    renderHelper.current.toggleDisableAutoPageChange();
+  }
+  const autoFocus = () => {
+    renderHelper.current.toggleDisableAutoFocus();
+  }
+  const laserPointer = () => {
+    renderHelper.current.toggleLaserPointer();
+  }
+  const mousePen = () => {
+    renderHelper.current.toggleDisableMousePen();
+  }
+  const panZoom = () => {
+    renderHelper.current.toggleDisablePanZoom();
+  }
+  const setPenType = (e) => {
     const penName = e.target.value;
     const penType = penName==="펜" ? 0 : penName==="지우개" ? 1 : 2
     penManager.setPenRendererType(penType);
@@ -247,9 +273,9 @@ const ViewBasic = () => {
     const penColorNum = Math.floor(Math.random() * 9);
     penManager.setColor(penColorNum);
   }
-  const setOption = () => {
-    setOptions(renderHelper.current.sendingOptions());
-    forceUpdate();
+  const changeThick = () => {
+    const penThickNum = Math.floor(Math.random() * 9);
+    penManager.setThickness(penThickNum)
   }
   const pdfSave = () => {
     savePDF("testPDF");
@@ -263,33 +289,84 @@ const ViewBasic = () => {
   const wrowChange = () => {
     renderHelper.current.handlePageChangerWriterChanged("");
   }
-
-
+  const replayStart = () => {
+    renderHelper.current.replayStart();
+  }
+  const replayPause = () => {
+    renderHelper.current.replayPause();
+  }
+  const replayRewind = () => {
+    renderHelper.current.replayRewind();
+  }
+  const replayOn = () => {
+    const currDuration = renderHelper.current.replayOn();
+    setDuration(currDuration);
+    if(currDuration){
+      SetReplayModalOn(true);
+      console.log(`리플레이 총 시간 : ${Math.floor(currDuration / 1000)}`);
+    }
+  }
+  const replayOff = () => {
+    renderHelper.current.replayOff();
+    SetReplayModalOn(false);
+  }
+  const prevPage = () => {
+    let currIdx = pageInfos.findIndex((sobp) => sobp.page === activePage.page);
+    if(currIdx === 0) {
+      console.log("첫 페이지입니다.")
+      return;
+    }
+    const prevPage = pageInfos[currIdx - 1];
+    renderHelper.current.setActivePageToMain(prevPage);
+  }
+  const nextPage = () => {
+    let currIdx = pageInfos.findIndex((sobp) => sobp.page === activePage.page);
+    if(currIdx === pageInfos.length - 1) {
+      console.log("마지막 페이지입니다.")
+      return;
+    }
+    const nextPage = pageInfos[currIdx + 1];
+    renderHelper.current.setActivePageToMain(nextPage);
+  }
+  const removeAllStroke = () => {
+    renderHelper.current.removeAllCanvasObject(activePage);
+  }
+  const setViewFit = () => {
+    renderHelper.current.setViewFit(ZoomFitEnum.HEIGHT);
+  }
   return (
     <>
       <Header controller={controller} penVersionInfo={penVersionInfo} penSettingInfo={penSettingInfo} passwordPen={passwordPen} authorized={authorized} />
-      <div id="abc" className={classes.mainBackground}>
+      <div id="menu">
+        <Button onClick={fileOpen}>파일열기</Button>
+        <Button onClick={pdfSave}>PDF저장</Button>
+        <Button onClick={zoomIn}>줌인</Button>
+        <Button onClick={zoomOut}>줌아웃</Button>
+        {/* <Button onClick={showGrid}>그리드ONOFF</Button> */}
+        {/* <Button onClick={cropMode}>크롭모드ONOFF</Button> */}
+        <Select onChange={setPenType} defaultValue={"펜"}>
+          <MenuItem value={"펜"}>펜</MenuItem>
+          <MenuItem value={"지우개"}>지우개</MenuItem>
+          <MenuItem value={"마커"}>마커</MenuItem>
+        </Select>
+        {/* <Button onClick={changeColor}>랜덤색변경</Button> */}
+        {/* <Button onClick={changeThick}>랜덤두께변경</Button> */}
+        {/* <Button onClick={autoPageChange}>오토페이지체인지ONOFF</Button> */}
+        {/* <Button onClick={autoFocus}>오토포커스ONOFF</Button> */}
+        {/* <Button onClick={laserPointer}>레이저포인터ONOFF</Button> */}
+        {/* <Button onClick={mousePen}>마우스펜ONOFF</Button> */}
+        {/* <Button onClick={panZoom}>패닝ONOFF</Button> */}
+        <Button onClick={replayOn}>리플레이온</Button>
+        <Button onClick={replayOff}>리플레이오프</Button>
+        <Button onClick={prevPage}>이전페이지</Button>
+        <Button onClick={nextPage}>다음페이지</Button>
+        <Button onClick={removeAllStroke}>전체지우기</Button>
+        <Button onClick={setViewFit}>페이지높이맞춤</Button>
+      </div>
+      <div id="view" className={classes.mainBackground}>
         <MainViewFC/>
       </div>
-      <div id="efg" className={classes.mainBackground}>
-        <button onClick={fileOpen}>파일열기</button>
-        <button onClick={pdfSave}>PDF저장</button>
-        <button onClick={zoomIn}>줌인</button> : {options.zoom}
-        <button onClick={zoomOut}>줌아웃</button> : {options.zoom}
-        <button onClick={showGrid}>그리드</button> : {options.showGrid+""}
-        <button onClick={cropMode}>크롭모드</button>
-        <button onClick={writerChange}>라이터</button>
-        <button onClick={onwerChange}>오너</button>
-        <button onClick={wrowChange}>라오</button>
-        <select onChange={erase}>
-          <option value={"펜"}>펜</option>
-          <option value={"지우개"}>지우개</option>
-          <option value={"마커"}>마커</option>
-        </select>
-        <button onClick={changeColor}>색변경</button>
-        <span>레이저포인터 : {options.laserPointer+""}</span>
-        <span>페이지자동변환금지 : {options.disableAutoPageChange+""}</span>
-      </div>
+      <ReplayModal modalState={replayModalOn} replayOff={replayOff} duration={duration} renderHelper={renderHelper.current}/>
     </>
   );
 };
