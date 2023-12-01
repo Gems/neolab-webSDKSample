@@ -14,9 +14,9 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "4.0.3",
     "typescript": "^4.6.3",
-    "web-vitals": "^2.1.4",
-    "web_pen_sdk": "^0.5.7",
-    "web_view_sdk_test": "^2.0.2"
+    "web_pen_sdk": "^0.6.8",
+    "web_view_sdk_test": "^2.0.2",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
