@@ -86,7 +86,7 @@ const PenBasic = () => {
       setPaperSize(paperSize);
       
       // 페이지가 바뀔 때마다 PUI 세팅을 새로 해준다. 왜냐하면 페이지마다 PUI 위치가 다를 수 있기 때문
-      NoteServer.setNrojInPuiController(pageInfo);
+      NoteServer.setNprojInPuiController(pageInfo);
       
       if (isPlatePaper(pageInfo)) {
         // SmartPlate Case, 서버에서 가져온 이미지를 사용하지 않으므로 0으로 설정해주고, canvasFb의 backgroundColor를 white로 만들어준다.
