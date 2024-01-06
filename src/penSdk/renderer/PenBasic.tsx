@@ -83,15 +83,17 @@ const PenBasic = () => {
         return;
       } 
       await NoteServer.getNoteImage(pageInfo, setImageBlobUrl);
-      const paperSize: any = await NoteServer.extractMarginInfo(pageInfo);
+      
+      let nprojUrl: string | null = null;
+      if (pageInfo.book && pageInfo.book === 3138) {
+        nprojUrl = note_3138;
+      }
+
+      const paperSize: any = await NoteServer.extractMarginInfo(nprojUrl, pageInfo);
       setPaperSize(paperSize);
       
       // 페이지가 바뀔 때마다 PUI 세팅을 새로 해준다. 왜냐하면 페이지마다 PUI 위치가 다를 수 있기 때문
-      if (pageInfo.book) {
-        const bookCode = pageInfo.book;
-        const url = bookCode === 3138 ? note_3138 : null;
-        NoteServer.setNprojInPuiController(url, pageInfo);
-      }
+      NoteServer.setNprojInPuiController(nprojUrl, pageInfo);
       
       if (isPlatePaper(pageInfo)) {
         // SmartPlate Case, 서버에서 가져온 이미지를 사용하지 않으므로 0으로 설정해주고, canvasFb의 backgroundColor를 white로 만들어준다.
