@@ -7,6 +7,7 @@ import { NULL_PageInfo } from '../utils/constants';
 import Header from '../component/Header';
 import { isPlatePaper, isPUI, isSamePage } from 'web_view_sdk_test/dist/common';
 import note_3138 from '../../assets/note_3138.nproj';
+import alice from '../../assets/alice_Quiz03.nproj';
 
 const useStyle = makeStyles(() => ({
   mainBackground: {
@@ -82,18 +83,30 @@ const PenBasic = () => {
       if (pageInfo.section === 0) {  // pageInfo.section === 0 -> abnormal pageInfo
         return;
       } 
-      await NoteServer.getNoteImage(pageInfo, setImageBlobUrl);
+      try {
+        await NoteServer.getNoteImage(pageInfo, setImageBlobUrl);
+      } catch (e) {
+        console.log(e);
+      }
       
       let nprojUrl: string | null = null;
       if (pageInfo.book && pageInfo.book === 3138) {
         nprojUrl = note_3138;
+      } else if (pageInfo.owner === 45 && pageInfo.book === 3) {
+        nprojUrl = alice;
       }
-
-      const paperSize: any = await NoteServer.extractMarginInfo(nprojUrl, pageInfo);
-      setPaperSize(paperSize);
+      try {
+        await NoteServer.setNprojInPuiController(nprojUrl, pageInfo);
+  
+        const paperSize = (await NoteServer.extractMarginInfo(nprojUrl, pageInfo)) as any;
+        setPaperSize(paperSize);
+      } catch (e) {
+        console.log(e)
+      } finally {
+        console.log("success");
+      }
       
       // 페이지가 바뀔 때마다 PUI 세팅을 새로 해준다. 왜냐하면 페이지마다 PUI 위치가 다를 수 있기 때문
-      NoteServer.setNprojInPuiController(nprojUrl, pageInfo);
       
       if (isPlatePaper(pageInfo)) {
         // SmartPlate Case, 서버에서 가져온 이미지를 사용하지 않으므로 0으로 설정해주고, canvasFb의 backgroundColor를 white로 만들어준다.
