@@ -1,14 +1,11 @@
 import {UserData} from "./enum";
 
-
 interface UserInitData {
     userId:string,
     accessToken:string,
     url : string,
     clientId : string
 }
-
-
 
 class User {
     userId : string = "";

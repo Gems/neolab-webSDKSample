@@ -1,61 +1,64 @@
 import React from 'react';
-import { Button, makeStyles } from '@material-ui/core';
+import {Button, makeStyles} from '@material-ui/core';
 
-const useStyle = makeStyles((theme) => ({
-}));
+const useStyle = makeStyles((theme) => ({}));
 
-const PasswordButton = ({ controller, passwordPen }) => {
+const PasswordButton = ({controller, passwordPen}) => {
   const classes = useStyle();
 
   const setPassword = () => {
-    const newPassword = prompt("신규 패스워드를 입력하세요. (4자리)");
-    const reNewPassword = prompt("다시 한 번 입력해주세요.");
+    const newPassword = prompt("Please enter your new password");
+    const reNewPassword = prompt("Please enter the new password again.");
 
-    if(newPassword === null || newPassword.length !== 4){
-      alert("패스워드를 바르게 입력해주세요.")
+    if (newPassword === null || newPassword.length !== 4) {
+      alert("Please enter the password correctly.")
       return;
     }
 
-    if(newPassword === reNewPassword){
-      //패스워드를 설정하기 위해서는 oldPassword를 default_PASSWORD인 0000으로 설정해둬야 한다.
+    if (newPassword === reNewPassword) {
+      // To set up a password, we use 0000 as the old password.
       controller?.SetPassword("0000", newPassword);
-    }else{
-      alert("비밀번호가 일치하지 않습니다.");
+    } else {
+      alert("The provided passwords don't match.");
     }
   }
   const updatePassword = () => {
-    const oldPassword = prompt("기존 패스워드를 입력하세요. (4자리)");
-    const newPassword = prompt("신규 패스워드를 입력하세요. (4자리)");
-    
-    if(oldPassword === null || newPassword === null) return
-    if(newPassword !== null && newPassword.length !== 4){
-        alert("패스워드는 4자리");
-        return;
+    const oldPassword = prompt("Please enter your current password");
+    const newPassword = prompt("Enter your new password");
+
+    if (!oldPassword || !newPassword)
+      return;
+
+    if (newPassword && newPassword.length !== 4) {
+      alert("The password should be 4 digits long.");
+      return;
     }
 
     controller?.SetPassword(oldPassword, newPassword);
   };
 
   const removePassword = () => {
-    const oldPassword = prompt("기존 패스워드를 입력하세요. (4자리)");
-    if(oldPassword === null || oldPassword.length !== 4){
-      alert("패스워드를 바르게 입력해주세요.")
+    const oldPassword = prompt("Please enter your current password");
+
+    if (!oldPassword || oldPassword.length !== 4) {
+      alert("Please enter the password correctly.")
       return;
     }
-    //패스워드를 제거하기 위해서는 newPassword를 빈 문자열(더미 값)로 설정해둬야 한다.
+
+    //To remove the password, please set newPassword to an empty string (an empty value).
     controller?.SetPassword(oldPassword, "");
   }
 
   return (
-    <>
-      {passwordPen ?
-        <>
-          <Button onClick={updatePassword} >updatePassword</Button>
-          <Button onClick={removePassword} >removePassword</Button>
-        </> :
-        <Button onClick={setPassword} >setPassword</Button>
-      }
-    </>
+      <>
+        {passwordPen ?
+            <>
+              <Button onClick={updatePassword}>Update Password</Button>
+              <Button onClick={removePassword}>Remove Password</Button>
+            </> :
+            <Button onClick={setPassword}>Set Password</Button>
+        }
+      </>
   );
 };
 

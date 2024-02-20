@@ -1,6 +1,6 @@
 import { Box, Button, Slider } from "@material-ui/core";
-import { useEffect, useState } from "react";
-import { RenderHelper, ViewMessageType } from "web_view_sdk_test";
+import { useEffect, useState} from "react";
+import {RenderHelper, ViewMessageType} from "web_view_sdk_test";
 
 type Props = {
   modalState: boolean;
@@ -23,7 +23,7 @@ const ReplayModal = (props: Props) => {
     setPosition(0);
   }, [props.modalState])
 
-  const viewMessage = (type, args) => {
+  const viewMessage = (type: number, args: { progress: any; deltaTime: number; }) => {
     switch(type){
       case ViewMessageType.REPLAY_PROGRESS:
         console.log(`리플레이 진행도 : ${args.progress}, 진행시간 : ${Math.floor(args.deltaTime / 1000)}`);
@@ -43,10 +43,14 @@ const ReplayModal = (props: Props) => {
   const replayRewind = () => {
     props.renderHelper.replayRewind();
   }
-  const changeTime = (event, newValue) => {
-    props.renderHelper.replaySetTime(newValue);
-    setPosition(newValue);
+
+  const changeTime = (event: any, newValue: number | number[]) => {
+    const time = Array.isArray(newValue) ? newValue[0] : newValue;
+
+    props.renderHelper.replaySetTime(time);
+    setPosition(time);
   }
+
   const formatDuration = (time: number) => {
     const second = Math.floor(time / 1000);
     let minute = Math.floor(second / 60);

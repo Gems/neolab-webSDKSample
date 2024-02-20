@@ -48,29 +48,29 @@ const useStyle = makeStyles((theme) => ({
     backgroundColor: 'rgba(255,255,255,1)',
     display: 'flex',
   },
-  penIfno: {
+  penInfo: {
     display: 'flex',
     alignItems: 'center',
     marginRight: '20px',
   },
 }));
 
-const Header = ({ controller, penVersionInfo, penSettingInfo, passwordPen, authorized }) => {
+const Header = ({ controller, configurationInfo, passwordPen, authorized }) => {
   const classes = useStyle();
   return (
     <div className={classes.wrap}>
       <div className={classes.logoContainer}>
         <img src={LogoTextImage} className={classes.imgStyle} alt="logo" />
-        <Typography className={classes.title}>WEB SDK SAMPLE</Typography>
+        <Typography className={classes.title}>Web SDK Sample</Typography>
       </div>
       <div className={classes.navStyle}>
-        <Typography variant='subtitle2' className={classes.penIfno}>{authorized ? `Mac: ${penVersionInfo.MacAddress}` : ''}</Typography>
-        <Typography variant='subtitle2' className={classes.penIfno}>{authorized ? `HoverMode: ${penSettingInfo.HoverMode}` : ''}</Typography>
-        <Typography variant='subtitle2' className={classes.penIfno}>{authorized ? `Battery: ${penSettingInfo.Battery}` : ''}</Typography>
+        <Typography variant='subtitle2' className={classes.penInfo}>{authorized ? `Mac: ${controller.info.MacAddress}` : ''}</Typography>
+        <Typography variant='subtitle2' className={classes.penInfo}>{authorized ? `HoverMode: ${configurationInfo.HoverMode}` : ''}</Typography>
+        <Typography variant='subtitle2' className={classes.penInfo}>{authorized ? `Battery: ${configurationInfo.Battery}` : ''}</Typography>
         {authorized ? <FirmwareButton controller={controller} /> : ""}
         {/* {authorized ? <ProfileButton controller={controller} /> : ""} */}
         {authorized ? <PasswordButton controller={controller} passwordPen={passwordPen} /> : ""}
-        <ConnectButton controller={controller} penInfo={penVersionInfo} />
+        <ConnectButton controller={controller} />
       </div> 
     </div>
   );

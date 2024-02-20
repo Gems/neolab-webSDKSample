@@ -20,7 +20,8 @@ const ConnectButton = ({ controller }) => {
 
   const update = () => {
       if(fileName === ""){
-          alert("파일부터 선택해주세요.")
+          // alert("파일부터 선택해주세요.");
+          alert("Please select a file");
           return;
       }
       controller.RequestFirmwareInstallation(fwFile, "1.10", true)
@@ -29,8 +30,8 @@ const ConnectButton = ({ controller }) => {
   return (
       <>
         <input type="file" id="inputFile" onChange={handleFile} style={{display:'none'}} />
-        <Button onClick={() => input?.click()} >펌웨어파일선택<br/>{fileName}</Button>
-        <Button onClick={update} >업데이트 시작</Button>
+        <Button onClick={() => input?.click()} >Software file selection:<br/>{fileName}</Button>
+        <Button onClick={update} >Start the update</Button>
       </>
   );
 };

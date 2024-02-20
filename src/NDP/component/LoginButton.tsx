@@ -5,6 +5,7 @@ import NDP from "../../NDP-lib";
 
 
 (window as any).NDP = NDP;
+
 const ndp = new NDP({
   googleClientId : "neolab_local_test_for_google",
   googleClientSecret : "Di8DTTUPauInbLZxI1NiiWRm8rh2zU5I",
@@ -14,10 +15,10 @@ const ndp = new NDP({
   applicationId : 1538,
   resourceOwnerId : "neolab"
 });
+
 ndp.setShare();
 
-
-const useStyle = makeStyles((theme) => ({
+const useStyle = makeStyles(() => ({
   mainBackground: {
     width: '100%',
     height: '100%',
@@ -35,13 +36,11 @@ const tryLogin = async ()=>{
   // const code = await NDP.getInstance().Auth.ndpLogin();
   console.log(code);
   // NDP.getInstance().getLoginToken(code);
-
 }
 
 const LoginButton = () => {
   const classes = useStyle();
 
-  
   return (
     <React.Fragment>
       <Button onClick={tryLogin}>Login</Button>

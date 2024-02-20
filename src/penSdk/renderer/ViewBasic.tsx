@@ -1,7 +1,13 @@
 import { Button, duration, makeStyles, MenuItem, Select } from '@material-ui/core';
-import { PenHelper, PenMessageType, PenController } from 'web_pen_sdk';
+// @ts-ignore
+import { PenHelper, PenController } from 'web_pen_sdk';
 import React, { useEffect, useReducer, useRef, useState } from "react";
-import { VersionInfo, SettingInfo } from 'web_pen_sdk/dist/Util/type';
+import {
+  VersionInfo,
+  PenConfigurationInfo,
+  AuthorizationRequest
+// @ts-ignore
+} from 'web_pen_sdk/Util/type';
 import Header from '../component/Header';
 import { appendPdfToStorage, MainViewFC, PenManager, RenderHelper, savePDF, ViewMessageType } from 'web_view_sdk_test';
 import { OuterRendererProps } from 'web_view_sdk_test/dist/renderer';
@@ -36,9 +42,8 @@ const ViewBasic = () => {
   // console.error("[ViewBasic] Init");
   const classes = useStyle();
   
-  const [passwordPen, setPasswordPen] = useState<boolean>(false);
-  const [penVersionInfo, setPenVersionInfo] = useState<VersionInfo>();
-  const [penSettingInfo, setPenSettingInfo] = useState<SettingInfo>();
+  const [isAuthenticationRequired, setIsAuthenticationRequired] = useState<boolean>(false);
+  const [penMessageArgs, setPenSettingInfo] = useState<PenConfigurationInfo>();
   const [controller, setController] = useState<PenController>();
   const [authorized, setAuthorized] = useState<boolean>(false);
   
@@ -55,117 +60,53 @@ const ViewBasic = () => {
   const [duration, setDuration] = useState<number>(0);
 
   useEffect(() => {
-    console.error("[renderHelper] init!!!!!!!!!!!!!!!!!!")
-
     renderHelper.current = new RenderHelper();
-  }, []);
-  
-  /**
-   * This callback type is called `dotCallback`.
-   * 
-   * @callback dotCallback
-   */
-  useEffect(() => {
-    PenHelper.dotCallback = async (mac, dot) => {
-      // console.log(dot);
-      penManager.passingDot(dot);
-      // strokeProcess(dot);
-    }
-  });
-  
-  /**
-   * This callback type is called `messageCallback`. (Pen Event Callback)
-   * 
-   * @callback messageCallback
-   */
-  useEffect(() => {
-    PenHelper.messageCallback = async (mac, type, args) => {
-      messageProcess(mac, type, args);
-    }
-  });
-  
-  
-  /**
-   * This callback type is called `messageCallback`. (View Event Callback)
-   * 
-   * @callback messageCallback
-   */
-  useEffect(() => {
-    renderHelper.current.messageCallback = async (type, args) => {
-      viewMessage(type, args);
-    }
-  });
-  
-  /**
-   * Process ncode dot.
-   * 
-   * @param {Dot} dot
-   */
-  // const strokeProcess = (dot: Dot) => {
-    //   penManager.passingDot(dot);
-    // }
+    renderHelper.current.messageCallback = viewMessage;
 
-  //region ViewSDK
-  const registPen = (controller) => {
+    PenHelper.debugMode(false);
+    // TODO: Configure Pen Callbacks here.
+  });
+
+  const handleConfigurationInfo = (configurationInfo: PenConfigurationInfo) => {
+    const _controller = PenHelper.pens.filter(
+        c => c.configurationInfo === configurationInfo)[0];
+
+    if (controller !== _controller)
+      setController(_controller);  // 해당 펜의 controller를 등록해준다.
+
+    setPenSettingInfo(configurationInfo);  // 펜의 Setting 정보 저장
+  }
+
+  const handleSetupSuccess = () => controller?.RequestPenStatus();
+
+  const handlePenDisconnected = () => {
+    console.log('Pen disconnected');
+
+    setController(undefined);  // 펜 연결해제시 펜 controller 초기화.
+    setPenSettingInfo(undefined);  // 펜 연결해제시 Setting 정보 초기화
+    setAuthorized(false);  // 연결해제시 인증상태 초기화
+  }
+
+  const handleAuthenticationRequest = (request: AuthorizationRequest) => {
+    setIsAuthenticationRequired(true);
+    requestAuthentication(request);  // 패스워드 요청시 process
+  }
+
+  const handleAuthenticationSuccess = (noPassword: boolean) => {
+    setIsAuthenticationRequired(!noPassword);
+  }
+
+  const handlePenAuthorized = () => {
+    setAuthorized(true);  // Pen 인증 성공시 authorized trigger 값 true 변경
     penManager.registerPen(controller);
   }
-  //endRegion
 
-  /**
-   * Message callback process. (Pen Event Processing)
-   * 
-   * @param mac 
-   * @param type 
-   * @param args 
-   */
-  const messageProcess = (mac, type, args) => {
-    // console.log(mac, type, args);
-    PenHelper.debugMode(false);
-
-    switch (type) {
-      case PenMessageType.PEN_SETTING_INFO:
-        const _controller = PenHelper.pens.filter((c) => c.info.MacAddress === mac)[0];
-        setController(_controller);  // 해당 펜의 controller를 등록해준다.
-        setPenSettingInfo(args);  // 펜의 Setting 정보 저장
-        setPenVersionInfo(_controller.RequestVersionInfo());  // 펜의 versionInfo 정보 저장
-        break;
-      case PenMessageType.PEN_SETUP_SUCCESS:
-        controller?.RequestPenStatus();
-        break;
-      case PenMessageType.PEN_DISCONNECTED:
-        console.log('Pen disconnted');
-        setController(undefined);  // 펜 연결해제시 펜 controller 초기화.
-        setPenVersionInfo(undefined);  // 펜 연결해제시 펜 상태정보 초기화.
-        setPenSettingInfo(undefined);  // 펜 연결해제시 Setting 정보 초기화
-        setAuthorized(false);  // 연결해제시 인증상태 초기화
-        break;
-      case PenMessageType.PEN_PASSWORD_REQUEST:
-        setPasswordPen(true);
-        onPasswordRequired(args);  // 패스워드 요청시 process
-        break;
-      case PenMessageType.PASSWORD_SETUP_SUCCESS:
-        const usingPassword = args.UsingPassword;
-        if(usingPassword){
-          setPasswordPen(true);
-        }else{
-          setPasswordPen(false);
-        }
-        break;
-      case PenMessageType.PEN_AUTHORIZED:
-        setAuthorized(true);  // Pen 인증 성공시 authorized trigger 값 true 변경
-        registPen(controller);
-        break;
-      case PenMessageType.PEN_USING_NOTE_SET_RESULT:
-        controller?.SetHoverEnable(true);
-        break;
-      case PenMessageType.EVENT_DOT_PUI:
-        console.log(args);
-        break;
-      default:
-        break;
-    }
+  const handleRealtimeDataStatus = (enabled: boolean) => {
+    !controller && console.warn("Can't set Hover: controller is not defined");
+    controller?.SetHoverEnable(enabled);
   }
-  const viewMessage = (type, args) => {
+
+  const viewMessage = async (type, args) => {
     switch(type){
       case ViewMessageType.MOUSE_DOWN:
         console.log("MOUSEDOWN");
@@ -197,43 +138,48 @@ const ViewBasic = () => {
 
   /**
    * Request Password Process.
-   * 
-   * @param args 
+   *
+   * @param request
    */
-  const onPasswordRequired = (args: SettingInfo) => {
-    const password = prompt(`비밀번호를 입력해주세요. (4자리) (${args.RetryCount}회 시도)\n비밀번호 ${args.ResetCount}회 오류 시 필기데이터가 초기화 됩니다. `);
-    if (password === null) return;
-    
-    if (password.length !== 4) {
-      alert('패스워드는 4자리 입니다.')
-    }
-    
-    if (args.RetryCount >= 10) {
+  const requestAuthentication = (request: AuthorizationRequest) => {
+    if (request.retryCount >= 10)
       alert('펜의 모든정보가 초기화 됩니다.');
-    }
 
-    controller?.InputPassword(password);
+    const password = prompt(
+        `비밀번호를 입력해주세요. (4자리) (${request.retryCount}회 시도)`
+              + `\n비밀번호 ${request.resetCount}회 오류 시 필기데이터가 초기화 됩니다. `);
+
+    if (!password)
+      return;
+    
+    if (password.length !== 4)
+      alert('패스워드는 4자리 입니다.')
+
+    controller?.AuthorizeWithPassword(password);
   }
+
   const fileOpen = () => {
-    return new Promise(res => {
+    return new Promise(resolve => {
       const input = document.createElement("input");
       input.type = "file";
       input.multiple = false;
       input.accept = ".pdf";
       
-      let files;
-      let fileName;
-      let dataUrl;
       input.onchange = () => {
-        files = input.files;
-        fileName = files[0].name;
+        const files = input.files!;
+        const fileName = files[0].name;
         const fileReader = new FileReader();
+
         fileReader.readAsDataURL(files[0]);
+
         fileReader.onload = (e) => {
-          dataUrl = e.target?.result;
-          res(appendPdfToStorage(dataUrl, fileName, undefined));
+          throw new Error("Check implementation here");
+
+          // const dataUrl = e.target?.result;
+          // resolve(appendPdfToStorage(dataUrl, fileName, undefined));
         }
       }
+
       input.click();
     })
   }
@@ -336,7 +282,7 @@ const ViewBasic = () => {
   }
   return (
     <>
-      <Header controller={controller} penVersionInfo={penVersionInfo} penSettingInfo={penSettingInfo} passwordPen={passwordPen} authorized={authorized} />
+      <Header controller={controller} configurationInfo={penMessageArgs} passwordPen={isAuthenticationRequired} authorized={authorized} />
       <div id="menu">
         <Button onClick={fileOpen}>파일열기</Button>
         <Button onClick={pdfSave}>PDF저장</Button>

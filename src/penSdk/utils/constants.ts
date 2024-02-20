@@ -19,7 +19,7 @@ export const PlateNcode_3 = { // 부기보드 === Smart Plate
   page: 16,
 }
 
-export const NULL_PageInfo = {
+export const InvalidPageInfo = {
   section: -1,
   owner: -1,
   book: -1,

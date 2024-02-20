@@ -5,7 +5,6 @@ import NSocket from '../../NDP-lib/NSocket';
 
 const Socket = new NSocket("ws://localhost:8899");
 
-
 const useStyle = makeStyles((theme) => ({
   mainBackground: {
     width: '100%',

@@ -4,7 +4,7 @@ import LoginButton from "../component/LoginButton"
 import SocketButton from '../component/SocketButton';
 import LogoTextImage from '../../assets/pwa152.png';
 
-const useStyle = makeStyles((theme) => ({
+const useStyle = makeStyles(() => ({
   wrap: {
     background: 'rgba(255,255,255,1)',
     display: 'flex',
@@ -46,7 +46,7 @@ const useStyle = makeStyles((theme) => ({
     backgroundColor: 'rgba(255,255,255,1)',
     display: 'flex',
   },
-  penIfno: {
+  penInfo: {
     display: 'flex',
     alignItems: 'center',
     marginRight: '20px',

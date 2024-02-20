@@ -1,7 +1,6 @@
 
 export type clientIdType = "google" | "apple" | "ndp";
 
-
 export interface AuthorizationToken {
     client_id: string,
     access_token: string, // JWT Token
@@ -22,8 +21,6 @@ export interface TokenUserData {
     jti:string
 }
 
-
-
 interface LocalDateTime {
     nano: number,
     dayOfYear: number,
@@ -40,6 +37,7 @@ interface LocalDateTime {
         id: string
     }
 }
+
 type GenderType = "MALE" | "FEMALE" | "ETC";
 
 export interface UserData {
