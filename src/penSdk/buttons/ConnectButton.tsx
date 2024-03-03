@@ -7,7 +7,7 @@ const ConnectButton = ({ controller }) => <>
   { controller?.info
       ? <>
           <Button onClick={() => controller.RequestInitPenDisk()}>Init Pen</Button>
-          <Button onClick={() => PenHelper.disconnect(controller)}>Disconnect</Button>
+          <Button onClick={() => PenHelper.disconnect()}>Disconnect</Button>
         </>
       : <Button onClick={() => PenHelper.scanPen()}>Connect</Button>
   }

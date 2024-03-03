@@ -136,18 +136,8 @@ class CanvasRenderer {
     this.noteWidth = noteWidth;
     this.noteHeight = noteHeight;
 
-    /**
-     * Refactoring canvas width based on noteImage.
-     *
-     * Canvas(View) default height = 'window.innerHeight - 81(Header) - 82.25(input container)'
-     * CanvasFb.height : CanvasFb.width = noteHeight : noteWidth;
-     * CanvasFb.width(=refactorCanvasWidth) = (CanvasFb.height * noteWidth) / noteHeight;
-     */
-    const canvasWidth = this.canvas.height! * noteWidth / noteHeight;
-    // header(81) + inputContainer(82.25) + margin value(20)
-    const canvasHeight = window.innerHeight - 183.25;
-
-    this.changeCanvasSize(canvasWidth, canvasHeight);
+    if (noteWidth && noteHeight)
+      this.changeNoteSize(noteWidth, noteHeight);
   }
 
   togglePlateMode() {
@@ -163,7 +153,42 @@ class CanvasRenderer {
       this.imageBlobUrl = imageBlobUrl;
 
       bindImageToNote(this.imageBlobUrl)
-          .then(({ width, height }) => this.changeCanvasSize(width, height));
+          .then(({ width, height }) => this.changeNoteSize(width, height));
+  }
+
+  private changeNoteSize(width: number, height: number) {
+    this.noteWidth = width;
+    this.noteHeight = height;
+
+    /**
+     * Refactoring canvas width based on noteImage.
+     *
+     * Canvas(View) default height = 'window.innerHeight - 81(Header) - 82.25(input container)'
+     * CanvasFb.height : CanvasFb.width = noteHeight : noteWidth;
+     * CanvasFb.width(=refactorCanvasWidth) = (CanvasFb.height * noteWidth) / noteHeight;
+     */
+
+    // header(81) + inputContainer(82.25) + margin value(20)
+    const canvasHeight = window.innerHeight - 183.25;
+    const canvasWidth = canvasHeight * width / height;
+
+    this.changeCanvasSize(canvasWidth, canvasHeight);
+
+    const imageOptions = this.imageBlobUrl
+        &&  {  // Resizing noteImage to fit canvas size
+          scaleX: canvasWidth! / this.noteWidth,
+          scaleY: canvasHeight / this.noteHeight,
+          // backgroundImage angle setting
+          angle: this.angle,
+          top: this.angle === 180 || this.angle === 270 ? this.canvas.height : 0,
+          left: this.angle === 90 || this.angle === 180 ? this.canvas.width : 0,
+        };
+
+    this.canvas.backgroundColor = 'white';
+    this.canvas.setBackgroundImage(
+        this.imageBlobUrl ?? "",
+        this.canvas.requestRenderAll.bind(this.canvas),
+        imageOptions || undefined);
   }
 
   changeCanvasSize(width?: number, height?: number) {
@@ -177,23 +202,8 @@ class CanvasRenderer {
       this.hoverCanvas.setHeight(height);
     }
 
-    const imageOptions = this.imageBlobUrl
-        &&  {  // Resizing noteImage to fit canvas size
-          scaleX: this.canvas.width! / this.noteWidth,
-          scaleY: this.canvas.height! / this.noteHeight,
-          // backgroundImage angle setting
-          angle: this.angle,
-          top: this.angle === 180 || this.angle === 270 ? this.canvas.height : 0,
-          left: this.angle === 90 || this.angle === 180 ? this.canvas.width : 0,
-        };
-
-    this.canvas.backgroundColor = 'white';
-    this.canvas.setBackgroundImage(
-        this.imageBlobUrl ?? "",
-        this.canvas.renderAll.bind(this.canvas),
-        imageOptions || undefined);
-
-    this.canvas.renderAll(); // REVIEW: Do we need it?
+    this.canvas.requestRenderAll(); // REVIEW: Do we need it?
+    this.hoverCanvas.requestRenderAll();
   };
 
   /**
@@ -219,7 +229,40 @@ class CanvasRenderer {
     }
   }
 
-  drawStroke(dot: Dot) {
+  private isStrokeStarted: boolean = false;
+
+  drawStroke(stroke: Dot[]) {
+    if (!this.paperSize)
+      return;
+
+    const view = { width: this.canvas.width!, height: this.canvas.height! };
+
+    console.log("View: ", view);
+
+    let isFirstDotHandled = false;
+    this.ctx.lineWidth = 1;
+
+    for (let dot of stroke) {
+      const screenDot: ScreenDot = isPlatePaper(dot.pageInfo)
+          ? ncodeToSmartPlateScreen(dot, view, this.angle, this.paperSize)
+          : ncodeToScreen(dot, view, this.paperSize);
+
+      if (isFirstDotHandled) {
+        this.ctx.lineTo(screenDot.x, screenDot.y);
+        this.ctx.stroke();
+        this.ctx.closePath();
+      }
+
+      isFirstDotHandled = true;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(screenDot.x, screenDot.y);
+    }
+
+    this.ctx.closePath();
+  }
+
+  continueStroke(dot: Dot) {
     if (!this.paperSize)
       return;
 
@@ -229,29 +272,35 @@ class CanvasRenderer {
         : ncodeToScreen(dot, view, this.paperSize);
 
     try {
-      if (dot.dotType === DotTypes.PEN_DOWN) {
-        this.ctx.beginPath();
-
-        // In case of PenDown, the user doesn't have to see the hover pointer.
-        if (this.hoverPoint) {
-          this.hoverPoint.set({opacity: 0});
-          this.hoverCanvas.requestRenderAll();
-        }
-      } else if (dot.dotType === DotTypes.PEN_MOVE) {
+      if (this.isStrokeStarted) {
         this.ctx.lineWidth = 1;
         this.ctx.lineTo(screenDot.x, screenDot.y);
         this.ctx.stroke();
         this.ctx.closePath();
-        this.ctx.beginPath();
-        this.ctx.moveTo(screenDot.x, screenDot.y);
 
-      } else if (dot.dotType === DotTypes.PEN_UP) {
-        this.ctx.closePath();
+        this.isStrokeStarted = false;
+      }
 
-      } else if (dot.dotType === DotTypes.PEN_HOVER && this.hoverPoint) {
-        // TODO: Encapsulate hover point manipulation in a separate method.
-        this.hoverPoint.set({ left: screenDot.x, top: screenDot.y, opacity: 0.5 });
-        this.hoverCanvas.requestRenderAll();
+      switch (dot.dotType) {
+        case DotTypes.PEN_DOWN:
+          if (this.hoverPoint) {
+            this.hoverPoint.set({opacity: 0});
+            this.hoverCanvas.requestRenderAll();
+          }
+          break;
+        case DotTypes.PEN_MOVE:
+          this.ctx.beginPath();
+          this.ctx.moveTo(screenDot.x, screenDot.y);
+
+          this.isStrokeStarted = true;
+          break;
+
+        case DotTypes.PEN_HOVER:
+          if (this.hoverPoint) {
+            this.hoverPoint.set({ left: screenDot.x, top: screenDot.y, opacity: 0.5 });
+            this.hoverCanvas.requestRenderAll();
+          }
+          break;
       }
     } catch (e) {
       console.error("Handling stroke error", e);
@@ -274,10 +323,16 @@ class ConnectedPen {
 
   onDot: ((dot: Dot) => void) | null = null;
 
+  onStroke: ((stroke: Dot[]) => void) | null = null;
+
+  onPage: ((page: PageInfo) => void) | null = null;
+
   constructor(controller: PenController) {
     this.controller = controller;
     this.controller.setCallbacks({
       onDot: (dot: Dot) => this.onDot?.(dot),
+      onStroke: (stroke: Dot[]) => this.onStroke?.(stroke),
+      onPage: (page: PageInfo) => this.onPage?.(page),
       onConfigurationInfo: (configurationInfo: PenConfigurationInfo) => {
         this.configurationInfo = configurationInfo;
         this.triggerOnChange();
@@ -360,22 +415,31 @@ const PenBasic = () => {
 
   if (connectedPen) {
     connectedPen.onDisconnect = () => setPen(undefined);
+
     connectedPen.onChange = () => setPen({ connectedPen });
+
+    connectedPen.onStroke = (stroke: Dot[]) => canvasRenderer?.drawStroke(stroke);
+
     connectedPen.onDot = (dot: Dot) => {
-      if (!canvasRenderer || (isPlatePaper(dot.pageInfo) !== canvasRenderer.plateMode)) {
+      if (dot.dotType === DotTypes.PEN_ERROR)
+        return;
+
+      canvasRenderer?.continueStroke(dot);
+    };
+
+    connectedPen.onPage = (page: PageInfo) => {
+      if (!canvasRenderer || (isPlatePaper(page) !== canvasRenderer.plateMode))
         // SmartPlate를 터치했는데 plateMode가 on으로 설정되지 않으면 사용하지 못하도록 함.
         // EN: If the SmartPlate is touched and the plateMode is not set to "on," prevent its usage.
-        if (dot.dotType === DotTypes.PEN_DOWN)  // Show alert message only if penDown
-          alert('Plate Mode를 on으로 설정한 후, 캔버스를 생성해주세요.');
+        return alert('Plate Mode를 on으로 설정한 후, 캔버스를 생성해주세요.');
 
+      if (isSamePage(page, InvalidPageInfo))
+        // Don't handle Invalid (Empty) Page.
         return;
-      }
 
-      /** Update pageInfo either pageInfo !== NULL_PageInfo or pageInfo changed */
-      if (!isSamePage(dot.pageInfo, InvalidPageInfo) && !isSamePage(pageInfo as any, dot.pageInfo))
-        setPageInfo(dot.pageInfo);
-
-      canvasRenderer.drawStroke(dot);
+      // Set new pageInfo only oif page has changed
+      if (!isSamePage(pageInfo as any, page))
+        setPageInfo(page);
     };
   }
 
@@ -419,8 +483,6 @@ const PenBasic = () => {
         <div className={classes.hoverCanvasContainer}>
           <canvas ref={hoverCanvasRef} className={classes.hoverCanvas} width={window.innerWidth} height={window.innerHeight - 163.25}></canvas>
         </div>
-      </div>
-      <div id= "def" className={classes.mainBackground}>
       </div>
       { canvasRenderer &&
         <div className={classes.inputContainer}>
